@@ -1,8 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\notes-app-ui",
-    "\\notes-app-ui\\src"
+    "\\notes-app-server",
+    "\\notes-app-ui"
   ],
   "PreviewInSolutionExplorer": false
 }
