@@ -21,15 +21,10 @@ const App = () => {
         useState<Note | null>(null);
 
     useEffect(()=> {
-        console.log('got to the useEffect function');
         const fetchNotes = async ()=>{
             try{
                 const response = await fetch(`http://localhost:${port}/api/notes`);
-                console.log(`it let me fetch and the response is ${response}`);
                 const notes: Note[] = await response.json();
-
-                console.log('even found some notes');
-                console.log(notes);
                 setNotes(notes);
             } catch(e) {
                 console.log(e);
@@ -40,6 +35,7 @@ const App = () => {
     }, []);
 
     const handleNoteClick = (note:Note) => {
+        console.log(`I clicked this note: ${JSON.stringify(note)}`);
         setSelectedNote(note);
         setTitle(note.title);
         setContent(note.content);
@@ -59,8 +55,8 @@ const App = () => {
                     },
                     body: JSON.stringify({
                         title,
-                        content
-                    })
+                        content,
+                    }),
                 }
             );
             const newNote = await response.json();
@@ -81,8 +77,7 @@ const App = () => {
 
     };
 
-
-    const handleUpdateNote = (
+    const handleUpdateNote = async (
         event: React.FormEvent
     ) => {
         event.preventDefault();
@@ -91,21 +86,41 @@ const App = () => {
             return;
         }
 
-        const updatedNote: Note = {
+        try{
+            const response = await fetch(`http://localhost:${port}/api/notes/${selectedNote.id}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                    }),
+                }
+            )
+            const updatedNote = await response.json();
+
+            const updatedNotesList = notes.map((note) =>
+                note.id === selectedNote.id
+                    ? updatedNote
+                    : note
+            );
+
+            setNotes(updatedNotesList)
+            setTitle("")
+            setContent("")
+            setSelectedNote(null);
+        } catch(e) {
+            console.log(e);
+        }
+
+        //Old, local-only setup version
+        /* const updatedNote: Note = {
             id: selectedNote.id,
             title: title,
             content: content,
-        }
-
-        const updatedNotesList = notes.map((note) =>
-            note.id === selectedNote.id
-                ? updatedNote
-                : note
-        )
-        setNotes(updatedNotesList)
-        setTitle("")
-        setContent("")
-        setSelectedNote(null);
+        } */
     };
 
     const handleCancel = () => {
@@ -114,17 +129,34 @@ const App = () => {
         setSelectedNote(null)
     };
 
-    const deleteNote = (
+    const deleteNote = async ( //TODO: Add a user-verify popup before deleting in db
         event: React.MouseEvent,
         noteID: number
     ) => {
+        console.log('we are in the delete function');
         event.stopPropagation();
+        if (!noteID) {
+            console.log('apparently there is no selected note');
+            return;
+        }
+        try{
+            console.log('inside the try of the delete function');
+            await fetch(`http://localhost:${port}/api/notes/${noteID}`,
+                {
+                    method: 'DELETE',
+                }
+            );
 
-        const updatedNotes = notes.filter(
-            (note) => note.id !== noteID
-        )
+            console.log('by now we should have the response from the delete function');
 
-        setNotes(updatedNotes);
+            const updatedNotes = notes.filter(
+                (note) => note.id !== noteID
+            );
+
+            setNotes(updatedNotes);
+    } catch(e){
+        console.log(e);
+    }
     };
 
     return (
@@ -171,12 +203,7 @@ const App = () => {
                         onClick={() => handleNoteClick(note)}
                     >
                         <div className="notes-header">
-                            <button onClick={(event) =>
-                                deleteNote(event, note.id)
-                                }
-                            >
-                                x
-                            </button>
+                            <button onClick={(event) => deleteNote(event, note.id)}>x</button>
                         </div>
                         <h2>{note.title}</h2>
                         <p>{note.content}</p>
