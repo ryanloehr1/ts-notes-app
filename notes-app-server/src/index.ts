@@ -1,3 +1,6 @@
+//TODO: Standardize response messages on error
+//TODO: Each time the local server crashes, it requires the user to kill the existing task on the port number and re-run npm. Does not output multiple error messages if crashing
+
 import express from "express";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
@@ -58,6 +61,27 @@ app.put("/api/notes/:id", async(req, res) => {
 
 });
 
+app.delete("api/notes/:id", async(req, res) =>{
+    const id = parseInt(req.params.id);
+
+    if(!id || isNaN(id)) {
+        res.status(400).send({ message: "Provided ID is not a valid number"});
+    }
+
+    try {
+        await prisma.note.delete({
+            where: {id},
+        });
+        res.status(204).send(); //Successful, nothing to return
+    } catch (error) {
+        res.status(500).send({ message: "Something else went wrong"});
+    }
+});
+
 app.listen(port, () => {
     console.log(`server running on localhost:${port}`);
 });
+
+//If the localhost server crashes, must first run 'netstat -ano | findstr :[INSERT_PORT_NUMBER]'
+//and then from the response, then run 'taskkill /PID [RESPONSE_NUMBER] /F' to kill it
+//then restart via standard npm
