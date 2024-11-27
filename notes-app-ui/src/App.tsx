@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import "./App.css";
 
 type Note = {
@@ -8,31 +8,34 @@ type Note = {
 };
 
 const App = () => {
-    const [notes, setNotes] = useState<
-        Note[]
-    >([
-        {
-            id: 1,
-            title: "note title 1",
-            content: "content 1",
-        },
-        {
-            id: 2,
-            title: "note title 2",
-            content: "content 2",
-        },
-        {
-            id: 3,
-            title: "note title 3",
-            content: "content 3",
-        },
-    ]);
+    const [notes, setNotes] = useState<Note[]>([]); //Initialize empty array, or stub data here if no backend connection
 
+    //const port = process.env.REACT_APP_PORT;
+    const port = 6116; //TODO: Store the port number somewhere not hard-coded
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
 
     const [selectedNote, setSelectedNote] =
         useState<Note | null>(null);
+
+    useEffect(()=> {
+        console.log('got to the useEffect function');
+        const fetchNotes = async ()=>{
+            try{
+                const response = await fetch(`http://localhost:${port}/api/notes`);
+                console.log(`it let me fetch and the response is ${response}`);
+                const notes: Note[] = await response.json();
+
+                console.log('even found some notes');
+                console.log(notes);
+                setNotes(notes);
+            } catch(e) {
+                console.log(e);
+            }
+        }
+
+        fetchNotes();
+    }, []);
 
     const handleNoteClick = (note:Note) => {
         setSelectedNote(note);

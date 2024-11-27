@@ -9,7 +9,7 @@ const app = express();
 const prisma = new PrismaClient();
 
 //Pull a port from the env variables to ease access of changing
-const port = process.env.PORT || 5000;
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
