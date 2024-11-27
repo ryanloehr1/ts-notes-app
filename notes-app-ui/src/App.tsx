@@ -1,3 +1,5 @@
+//TODO: Add comments literally everywhere
+
 import { useEffect, useState } from 'react';
 import "./App.css";
 
@@ -43,20 +45,40 @@ const App = () => {
         setContent(note.content);
     }
 
-    const handleAddNote = (
+    const handleAddNote = async (
         event: React.FormEvent
     ) => {
         event.preventDefault();
 
-        const newNote: Note = {
+        try {
+            const response = await fetch(`http://localhost:${port}/api/notes`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content
+                    })
+                }
+            );
+            const newNote = await response.json();
+            setNotes([newNote, ...notes]);
+            setTitle("");
+            setContent("")
+        } catch(e){
+            console.log(e);
+        }
+
+        //Code below to only save it locally in browser
+        //Updated to now send to backend first, then populate after validation
+        /*const newNote: Note = {
             id: notes.length + 1,
             title: title,
             content: content
-        }
+        } */
 
-        setNotes([newNote, ...notes]);
-        setTitle("");
-        setContent("")
     };
 
 
